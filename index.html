@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>求职日记</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">📓</div>
+    <div>
+      <h1>求职日记</h1>
+      <div class="date" id="todayLabel"></div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="btnExport" class="icon-btn" title="导出备份">↓</button>
+    <button id="btnImport" class="icon-btn" title="导入备份">↑</button>
+  </div>
+</header>
+
+<main>
+  <section id="tab-dash" class="tab active">
+    <div class="grid2" id="statCards"></div>
+    <div class="card" id="conversionCard"></div>
+    <div class="card">
+      <h3>今日动态</h3>
+      <div id="todayStats" class="kv"></div>
+    </div>
+    <div class="card">
+      <h3>最近面试</h3>
+      <div id="recentInterviews" class="kv"></div>
+    </div>
+    <div class="card">
+      <h3>待跟进</h3>
+      <div id="pendingTodos" class="kv"></div>
+    </div>
+  </section>
+
+  <section id="tab-records" class="tab">
+    <div class="card">
+      <h3>记一笔</h3>
+      <form id="recordForm">
+        <input type="date" id="recDate" required>
+        <input type="text" id="recCompany" placeholder="公司名" required>
+        <input type="text" id="recPosition" placeholder="岗位">
+        <select id="recPlatform">
+          <option>BOSS直聘</option>
+          <option>智联招聘</option>
+          <option>前程无忧</option>
+          <option>实习僧</option>
+          <option>其他</option>
+        </select>
+        <select id="recAction">
+          <option>打招呼</option>
+          <option>回复</option>
+          <option>交换简历</option>
+          <option>约面试</option>
+          <option>面试</option>
+          <option>Offer</option>
+          <option>拒绝</option>
+        </select>
+        <input type="text" id="recNote" placeholder="备注（薪资 / 跟进事项等）">
+        <button type="submit" class="primary">保存</button>
+      </form>
+    </div>
+    <div class="card">
+      <h3>全部记录（<span id="recordCount">0</span>）</h3>
+      <div id="recordList"></div>
+    </div>
+  </section>
+
+  <section id="tab-interviews" class="tab">
+    <div class="card">
+      <h3>面试复盘</h3>
+      <form id="interviewForm">
+        <input type="date" id="ivDate" required>
+        <input type="text" id="ivCompany" placeholder="公司名" required>
+        <input type="text" id="ivPosition" placeholder="岗位">
+        <select id="ivForm">
+          <option>线下面试</option>
+          <option>线上一对一</option>
+          <option>HR面</option>
+          <option>老板面</option>
+          <option>技术面</option>
+          <option>笔试</option>
+        </select>
+        <select id="ivRating">
+          <option value="5">5 - 非常好</option>
+          <option value="4">4 - 不错</option>
+          <option value="3" selected>3 - 一般</option>
+          <option value="2">2 - 不佳</option>
+          <option value="1">1 - 很差</option>
+        </select>
+        <select id="ivResult">
+          <option>待定</option>
+          <option>通过</option>
+          <option>未通过</option>
+          <option>Offer</option>
+        </select>
+        <textarea id="ivReview" rows="4" placeholder="复盘：问了什么、答得如何、下次怎么改"></textarea>
+        <button type="submit" class="primary">保存</button>
+      </form>
+    </div>
+    <div id="interviewList"></div>
+  </section>
+
+  <section id="tab-todos" class="tab">
+    <div class="card">
+      <h3>加一个跟进</h3>
+      <form id="todoForm">
+        <input type="date" id="todoDue" required>
+        <input type="text" id="todoText" placeholder="事项（如：上午10点问黄小姐结果）" required>
+        <button type="submit" class="primary">添加</button>
+      </form>
+    </div>
+    <div id="todoList"></div>
+  </section>
+</main>
+
+<nav class="bottomnav">
+  <button class="nav-btn active" data-tab="dash"><span class="ni">📊</span>看板</button>
+  <button class="nav-btn" data-tab="records"><span class="ni">📝</span>记录</button>
+  <button class="nav-btn" data-tab="interviews"><span class="ni">🎤</span>面试</button>
+  <button class="nav-btn" data-tab="todos"><span class="ni">⏰</span>跟进</button>
+</nav>
+
+<dialog id="importDialog">
+  <h3>导入备份</h3>
+  <p class="hint">粘贴之前导出的 JSON 内容，导入会覆盖当前数据。</p>
+  <textarea id="importText" rows="6" placeholder='粘贴 JSON 内容'></textarea>
+  <div class="row">
+    <button id="importCancel">取消</button>
+    <button id="importOk" class="primary">导入</button>
+  </div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
