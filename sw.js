@@ -1,4 +1,4 @@
-const CACHE = 'job-diary-v2';
+const CACHE = 'job-diary-v3';
 const ASSETS = ['./', './index.html', './style.css', './app.js', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {

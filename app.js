@@ -13,6 +13,7 @@ let records = load('jd_records');
 let interviews = load('jd_interviews');
 let todos = load('jd_todos');
 let currentTab = 'dash';
+let recordFilter = 'all';
 
 /* ---------- 工具 ---------- */
 function load(key) {
@@ -186,14 +187,19 @@ function stats() {
 function renderDashboard() {
   const s = stats();
   const cards = [
-    { n: s.comm, l: '累计沟通', c: 'var(--blue)', i: '💬' },
-    { n: s.reply, l: '收到回复', c: 'var(--cyan)', i: '📨' },
-    { n: s.exchange, l: '交换简历', c: 'var(--green)', i: '📄' },
-    { n: interviews.length, l: '面试场次', c: 'var(--amber)', i: '🎤' },
-    { n: s.offer, l: 'Offer', c: 'var(--green)', i: '🎉', wide: true }
+    { n: s.comm, l: '累计沟通', c: 'var(--blue)', i: '💬', f: '打招呼' },
+    { n: s.reply, l: '收到回复', c: 'var(--cyan)', i: '📨', f: '回复' },
+    { n: s.exchange, l: '交换简历', c: 'var(--green)', i: '📄', f: '交换简历' },
+    { n: interviews.length, l: '面试场次', c: 'var(--amber)', i: '🎤', tab: 'interviews' },
+    { n: s.offer, l: 'Offer', c: 'var(--green)', i: '🎉', f: 'Offer', wide: true }
   ];
   $('#statCards').innerHTML = cards
-    .map((x) => '<div class="stat' + (x.wide ? ' wide' : '') + '" style="--sc:' + x.c + '"><div class="ico">' + x.i + '</div><div class="num">' + x.n + '</div><div class="lbl">' + x.l + '</div></div>')
+    .map(
+      (x) =>
+        '<div class="stat clickable' + (x.wide ? ' wide' : '') + '" style="--sc:' + x.c + '"' +
+        (x.tab ? ' data-tab="' + x.tab + '"' : ' data-filter="' + x.f + '"') +
+        '><div class="ico">' + x.i + '</div><div class="num">' + x.n + '</div><div class="lbl">' + x.l + '</div><span class="go">›</span></div>'
+    )
     .join('');
 
   const exchRate = s.exchange && s.comm ? Math.round((s.exchange / s.comm) * 100) : 0;
@@ -239,8 +245,18 @@ function renderDashboard() {
 
 /* ---------- 渲染：记录 ---------- */
 function renderRecords() {
-  const sorted = records.slice().sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
-  $('#recordCount').textContent = sorted.length;
+  const list = recordFilter === 'all' ? records : records.filter((r) => r.action === recordFilter);
+  const sorted = list.slice().sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt));
+  $('#recordCount').textContent = sorted.length + (recordFilter === 'all' ? '' : ' / ' + records.length);
+  $('#recordFilters').innerHTML = ['全部']
+    .concat(ACTIONS)
+    .map(
+      (a) => {
+        const v = a === '全部' ? 'all' : a;
+        return '<button class="chip' + (recordFilter === v ? ' active' : '') + '" data-chip="' + v + '">' + a + '</button>';
+      }
+    )
+    .join('');
   $('#recordList').innerHTML = sorted.length
     ? sorted
         .map(
@@ -253,7 +269,7 @@ function renderRecords() {
             '</div>'
         )
         .join('')
-    : '<div class="empty">还没有记录，去上方记一笔</div>';
+    : '<div class="empty">' + (recordFilter === 'all' ? '还没有记录，去上方记一笔' : '这个分类还没有记录') + '</div>';
 }
 
 /* ---------- 渲染：面试 ---------- */
@@ -376,6 +392,12 @@ function bindForms() {
 /* ---------- 事件委托：删除 / 完成 ---------- */
 function bindListActions() {
   document.addEventListener('click', (e) => {
+    const ch = e.target.closest('[data-chip]');
+    if (ch) {
+      recordFilter = ch.dataset.chip;
+      renderRecords();
+      return;
+    }
     const dr = e.target.closest('[data-del-record]');
     if (dr) {
       records = records.filter((r) => r.id !== dr.dataset.delRecord);
@@ -418,15 +440,32 @@ function bindListActions() {
   });
 }
 
+function switchTab(tab) {
+  currentTab = tab;
+  $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  $$('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + tab));
+  renderAll();
+}
+
 /* ---------- Tab 切换 ---------- */
 function bindNav() {
   $$('.nav-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      currentTab = btn.dataset.tab;
-      $$('.nav-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      $$('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-' + currentTab));
-      renderAll();
+      switchTab(btn.dataset.tab);
     });
+  });
+}
+
+function bindDashboard() {
+  $('#statCards').addEventListener('click', (e) => {
+    const c = e.target.closest('.stat');
+    if (!c) return;
+    if (c.dataset.tab) {
+      switchTab(c.dataset.tab);
+    } else if (c.dataset.filter) {
+      recordFilter = c.dataset.filter;
+      switchTab('records');
+    }
   });
 }
 
@@ -492,10 +531,7 @@ function init() {
   $('#ivDate').value = today();
   $('#todoDue').value = today();
   $('#fabAdd').addEventListener('click', () => {
-    $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'records'));
-    $$('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-records'));
-    currentTab = 'records';
-    renderAll();
+    switchTab('records');
     $('#recCompany').focus();
   });
   $('#mascotCard').addEventListener('click', () => {
@@ -507,6 +543,7 @@ function init() {
   bindForms();
   bindListActions();
   bindNav();
+  bindDashboard();
   bindImportExport();
   renderAll();
   if ('serviceWorker' in navigator) {

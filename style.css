@@ -95,3 +95,11 @@ dialog{background:#fff;color:var(--text);border:1px solid var(--line);border-rad
 dialog h3{margin:0 0 8px;color:var(--pink);}
 dialog textarea{width:100%;padding:11px 13px;background:#fff;border:1.5px solid var(--line);border-radius:14px;color:var(--text);font-size:13px;outline:none;resize:vertical;margin:8px 0;}
 dialog::backdrop{background:rgba(255,111,165,.25);}
+/* 可点击统计卡 + 筛选标签 */
+.stat.clickable{cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.stat.clickable:active{transform:scale(.96);}
+.stat .go{position:absolute;top:10px;right:12px;font-size:16px;color:var(--muted);opacity:.7;}
+#recordFilters{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.chip{background:#fff0f6;border:1.5px solid var(--line);border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:transform .12s,background .15s,color .15s;}
+.chip:active{transform:scale(.94);}
+.chip.active{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 4px 10px rgba(255,111,165,.30);}
