@@ -26,6 +26,16 @@
 
 <main>
   <section id="tab-dash" class="tab active">
+    <div class="mascot-card" id="mascotCard">
+      <div class="mascot-avatar" id="mascotAvatar">🐱</div>
+      <div class="mascot-info">
+        <div class="mascot-name">求职喵 <span class="lv-badge" id="lvBadge">Lv.1</span></div>
+        <div class="mascot-title" id="mascotTitle">求职萌新</div>
+        <div class="mascot-msg" id="mascotMsg">点我换个心情～</div>
+        <div class="bar"><div class="bar-fill" id="xpBar" style="background:linear-gradient(90deg,#ff9a9e,#fad0c4)"></div></div>
+        <div class="mascot-meta"><span id="xpText">0 XP</span><span id="streakText">🔥 连续 0 天</span></div>
+      </div>
+    </div>
     <div class="grid2" id="statCards"></div>
     <div class="card" id="conversionCard"></div>
     <div class="card">
@@ -122,6 +132,8 @@
     <div id="todoList"></div>
   </section>
 </main>
+
+<button id="fabAdd" class="fab" title="快速记录">＋</button>
 
 <nav class="bottomnav">
   <button class="nav-btn active" data-tab="dash"><span class="ni">📊</span>看板</button>

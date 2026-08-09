@@ -5,6 +5,9 @@ const $$ = (s) => Array.from(document.querySelectorAll(s));
 
 const PLATFORMS = ['BOSS直聘', '智联招聘', '前程无忧', '实习僧', '其他'];
 const ACTIONS = ['打招呼', '回复', '交换简历', '约面试', '面试', 'Offer', '拒绝'];
+const XP_MAP = { '打招呼': 1, '回复': 2, '交换简历': 5, '约面试': 8, '面试': 10, 'Offer': 50 };
+const LVLS = [0, 20, 50, 100, 180, 300, 500];
+const TITLES = ['求职萌新', '投递小能手', '面试冲锋者', '面霸初成', 'Offer收割机', '天选打工人'];
 
 let records = load('jd_records');
 let interviews = load('jd_interviews');
@@ -59,6 +62,92 @@ function barRow(label, pct, color) {
     '<div class="bar"><div class="bar-fill" style="width:' + w + '%;background:' + color + '"></div></div>' +
     '</div>'
   );
+}
+
+function totalXp() {
+  let xp = 0;
+  records.forEach((r) => {
+    xp += XP_MAP[r.action] || 0;
+  });
+  interviews.forEach(() => {
+    xp += 10;
+  });
+  todos.forEach((t) => {
+    if (t.done) xp += 3;
+  });
+  return xp;
+}
+
+function levelInfo(xp) {
+  let lv = 1;
+  for (let i = 0; i < LVLS.length; i++) {
+    if (xp >= LVLS[i]) lv = i + 1;
+  }
+  const cur = LVLS[lv - 1];
+  const next = LVLS[lv] || cur + 200;
+  const pct = Math.max(2, Math.min(100, Math.round(((xp - cur) / (next - cur)) * 100)));
+  return { lv, title: TITLES[lv - 1] || TITLES[TITLES.length - 1], xp, next, pct };
+}
+
+function iso(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function computeStreak() {
+  const dates = new Set(records.map((r) => r.date).concat(interviews.map((i) => i.date)));
+  if (!dates.size) return 0;
+  const d = new Date();
+  if (!dates.has(iso(d))) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (dates.has(iso(d))) {
+    n++;
+    d.setDate(d.getDate() - 1);
+  }
+  return n;
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  const lists = {
+    night: ['夜猫子出没，注意休息呀🌙', '凌晨还在拼，你已经很努力了', '深夜肝数据，猫猫心疼你'],
+    morning: ['早安！今天也要多投几家🌸', '早上好，元气满满去冲面试！', '新的一天，从打招呼开始！'],
+    noon: ['下午好，HR 活跃时段别错过！', '冲鸭，下午继续投投投！', '记得把午饭后的回复记一笔'],
+    evening: ['晚上好，今天的数据记了吗？', '夜跑完记得回来记账哦', '收工前看一眼看板吧～']
+  };
+  const list = h < 6 ? lists.night : h < 12 ? lists.morning : h < 18 ? lists.noon : lists.evening;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function showToast(msg) {
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+function burstEmoji() {
+  const emojis = ['🌸', '✨', '🎉', '💖', '🎀', '⭐'];
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('span');
+    s.className = 'burst';
+    s.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    s.style.left = 8 + Math.random() * 84 + 'vw';
+    s.style.animationDelay = Math.random() * 0.25 + 's';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 1400);
+  }
+}
+
+function renderMascot() {
+  const info = levelInfo(totalXp());
+  $('#lvBadge').textContent = 'Lv.' + info.lv;
+  $('#mascotTitle').textContent = info.title;
+  $('#xpBar').style.width = info.pct + '%';
+  $('#xpText').textContent = info.xp + ' XP（下一级 ' + info.next + '）';
+  $('#streakText').textContent = '🔥 连续 ' + computeStreak() + ' 天';
 }
 
 function actionClass(a) {
@@ -214,6 +303,8 @@ function renderTodos() {
 function bindForms() {
   $('#recordForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    const act = $('#recAction').value;
+    const beforeLv = levelInfo(totalXp()).lv;
     records.push({
       id: uid(),
       date: $('#recDate').value || today(),
@@ -228,10 +319,19 @@ function bindForms() {
     e.target.reset();
     $('#recDate').value = today();
     renderAll();
+    showToast('已记录：' + act + ' +' + (XP_MAP[act] || 0) + ' XP');
+    if (act === 'Offer') burstEmoji();
+    const afterLv = levelInfo(totalXp()).lv;
+    if (afterLv > beforeLv) {
+      showToast('升级啦！Lv.' + afterLv + '「' + levelInfo(totalXp()).title + '」🎉');
+      burstEmoji();
+    }
   });
 
   $('#interviewForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    const beforeLv = levelInfo(totalXp()).lv;
+    const result = $('#ivResult').value;
     interviews.push({
       id: uid(),
       date: $('#ivDate').value || today(),
@@ -247,6 +347,13 @@ function bindForms() {
     e.target.reset();
     $('#ivDate').value = today();
     renderAll();
+    showToast('复盘已保存 +10 XP 🌸');
+    if (result === 'Offer') burstEmoji();
+    const afterLv = levelInfo(totalXp()).lv;
+    if (afterLv > beforeLv) {
+      showToast('升级啦！Lv.' + afterLv + '「' + levelInfo(totalXp()).title + '」🎉');
+      burstEmoji();
+    }
   });
 
   $('#todoForm').addEventListener('submit', (e) => {
@@ -262,6 +369,7 @@ function bindForms() {
     e.target.reset();
     $('#todoDue').value = today();
     renderAll();
+    showToast('已添加跟进 ⏰');
   });
 }
 
@@ -293,9 +401,18 @@ function bindListActions() {
     if (tg) {
       const x = todos.find((t) => t.id === tg.dataset.toggleTodo);
       if (x) {
+        const beforeLv = levelInfo(totalXp()).lv;
         x.done = !x.done;
         save('jd_todos', todos);
         renderAll();
+        if (x.done) {
+          showToast('完成！+3 XP 🎉');
+          const afterLv = levelInfo(totalXp()).lv;
+          if (afterLv > beforeLv) {
+            showToast('升级啦！Lv.' + afterLv + '「' + levelInfo(totalXp()).title + '」🎉');
+            burstEmoji();
+          }
+        }
       }
     }
   });
@@ -361,6 +478,7 @@ function bindImportExport() {
 
 /* ---------- 启动 ---------- */
 function renderAll() {
+  renderMascot();
   renderDashboard();
   renderRecords();
   renderInterviews();
@@ -369,9 +487,23 @@ function renderAll() {
 
 function init() {
   $('#todayLabel').textContent = fmtCN(today());
+  $('#mascotMsg').textContent = greeting();
   $('#recDate').value = today();
   $('#ivDate').value = today();
   $('#todoDue').value = today();
+  $('#fabAdd').addEventListener('click', () => {
+    $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'records'));
+    $$('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-records'));
+    currentTab = 'records';
+    renderAll();
+    $('#recCompany').focus();
+  });
+  $('#mascotCard').addEventListener('click', () => {
+    $('#mascotMsg').textContent = greeting();
+    $('#mascotCard').classList.remove('bounce');
+    void $('#mascotCard').offsetWidth;
+    $('#mascotCard').classList.add('bounce');
+  });
   bindForms();
   bindListActions();
   bindNav();
